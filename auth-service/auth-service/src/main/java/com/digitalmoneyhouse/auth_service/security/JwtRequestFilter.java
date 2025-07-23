@@ -1,5 +1,6 @@
 package com.digitalmoneyhouse.auth_service.security;
 
+import com.digitalmoneyhouse.auth_service.service.BlacklistedTokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -7,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -20,6 +22,8 @@ import java.util.Collections;
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final String SECRET_KEY = "claveSecretaMuySegura123456789012345";
+    @Autowired
+    private BlacklistedTokenService blacklistedTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,6 +35,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
+
+            if (blacklistedTokenService.isBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token inválido: sesión cerrada.");
+                return;
+            }
             try {
                 Claims claims = Jwts
                         .parserBuilder()

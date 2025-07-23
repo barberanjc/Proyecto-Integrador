@@ -4,6 +4,7 @@ import com.digitalmoneyhouse.auth_service.client.UsuarioClient;
 import com.digitalmoneyhouse.auth_service.model.LoginRequest;
 import com.digitalmoneyhouse.auth_service.dto.UsuarioAuthDTO;
 import com.digitalmoneyhouse.auth_service.security.JwtUtil;
+import com.digitalmoneyhouse.auth_service.service.BlacklistedTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,9 @@ public class AuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private BlacklistedTokenService blacklistedTokenService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -50,13 +54,16 @@ public class AuthController {
             }
 
             String token = authHeader.substring(7);
-
             String email = jwtUtil.extractUsername(token);
+
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Token inválido");
             }
 
-            return ResponseEntity.ok("Logout exitoso");
+            blacklistedTokenService.blacklist(token);
+
+            return ResponseEntity.ok("Logout exitoso. Token invalidado.");
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
