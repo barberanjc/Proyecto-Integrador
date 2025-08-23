@@ -20,5 +20,6 @@ public class Account {
     private Long userId;
     private Double balance;
     private String alias;
+    private String cvu;
 }
 

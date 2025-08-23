@@ -1,5 +1,6 @@
 package com.digitalmoneyhouse.user_service.service;
 
+import com.digitalmoneyhouse.user_service.dto.AccountDTO;
 import com.digitalmoneyhouse.user_service.dto.UsuarioRegistroDTO;
 import com.digitalmoneyhouse.user_service.dto.UsuarioRespuestaDTO;
 import com.digitalmoneyhouse.user_service.model.Usuario;
@@ -24,10 +25,10 @@ import java.util.stream.Collectors;
 public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
-
     private List<String> palabras;
-
     private final RestTemplate restTemplate;
+
+
     @PostConstruct
     private void cargarPalabrasDesdeArchivo() {
         try {
@@ -39,7 +40,7 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RuntimeException("No se pudieron cargar las palabras.txt para alias", e);
         }
     }
-
+    @Override
     public UsuarioRespuestaDTO registrarUsuario(UsuarioRegistroDTO dto) {
 
 
@@ -64,9 +65,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
 
         String accountServiceUrl = "http://account-service/accounts/create/" + guardado.getId();
+        AccountDTO accountDTO = new AccountDTO(guardado.getCvu(), guardado.getAlias());
+
 
         try {
-            restTemplate.postForEntity(accountServiceUrl, null, String.class);
+            restTemplate.postForEntity(accountServiceUrl, accountDTO, String.class);
         } catch (Exception e) {
             System.err.println("Error al crear cuenta para el usuario: " + e.getMessage());
         }
@@ -101,6 +104,22 @@ public class UsuarioServiceImpl implements UsuarioService {
             alias = palabra1 + "." + palabra2 + "." + palabra3;
         } while (usuarioRepository.existsByAlias(alias));
         return alias;
+    }
+    @Override
+    public UsuarioRespuestaDTO obtenerUsuarioPorId(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return new UsuarioRespuestaDTO(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getDni(),
+                usuario.getEmail(),
+                usuario.getTelefono(),
+                usuario.getCvu(),
+                usuario.getAlias()
+        );
     }
 
 }

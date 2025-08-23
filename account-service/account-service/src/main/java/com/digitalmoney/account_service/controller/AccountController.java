@@ -1,5 +1,6 @@
 package com.digitalmoney.account_service.controller;
 
+import com.digitalmoney.account_service.dto.AccountDTO;
 import com.digitalmoney.account_service.exception.AccountNotFoundException;
 import com.digitalmoney.account_service.model.Transaction;
 import com.digitalmoney.account_service.service.AccountService;
@@ -34,15 +35,18 @@ public class AccountController {
     }
 
     @PostMapping("/create/{userId}")
-    public ResponseEntity<String> createAccount(@PathVariable Long userId) {
+    public ResponseEntity<String> createAccount(
+            @PathVariable Long userId,
+            @RequestBody AccountDTO accountDTO) {
         try {
-            accountService.createAccount(userId);
+            accountService.createAccount(userId, accountDTO);
             return ResponseEntity.ok("Cuenta creada exitosamente.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al crear la cuenta: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/{id}/transactions")
     public ResponseEntity<List<Transaction>> getTransactions(@PathVariable Long id) {
@@ -57,5 +61,8 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<AccountDTO> getAccountProfile(@PathVariable Long userId) {
+        return ResponseEntity.ok(accountService.getAccountProfile(userId));
+    }
 }

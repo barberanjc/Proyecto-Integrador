@@ -4,9 +4,9 @@ import com.digitalmoneyhouse.user_service.dto.UsuarioRegistroDTO;
 import com.digitalmoneyhouse.user_service.dto.UsuarioRespuestaDTO;
 import com.digitalmoneyhouse.user_service.model.Usuario;
 import com.digitalmoneyhouse.user_service.repository.UsuarioRepository;
-import com.digitalmoneyhouse.user_service.service.UsuarioServiceImpl;
+import com.digitalmoneyhouse.user_service.service.UsuarioService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +15,14 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/usuarios")
 public class UsuarioController {
-    @Autowired
-    private UsuarioServiceImpl usuarioService;
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+
+    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
+
+    public UsuarioController(UsuarioService usuarioService, UsuarioRepository usuarioRepository) {
+        this.usuarioService = usuarioService;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     @PostMapping("/registro")
     public ResponseEntity<UsuarioRespuestaDTO> registrarUsuario(@Valid @RequestBody UsuarioRegistroDTO dto) {
@@ -64,4 +68,15 @@ public class UsuarioController {
 
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioRespuestaDTO> obtenerUsuario(@PathVariable Long id) {
+        try {
+            UsuarioRespuestaDTO usuario = usuarioService.obtenerUsuarioPorId(id);
+            return ResponseEntity.ok(usuario);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
 }
+
