@@ -61,7 +61,7 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    @GetMapping("/profile/{userId}")
+    @GetMapping("/{userId}/profile")
     public ResponseEntity<AccountDTO> getAccountProfile(@PathVariable Long userId) {
         return ResponseEntity.ok(accountService.getAccountProfile(userId));
     }
