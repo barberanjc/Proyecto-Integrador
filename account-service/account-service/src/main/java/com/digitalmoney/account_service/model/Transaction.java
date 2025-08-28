@@ -25,7 +25,7 @@ public class Transaction {
     private Double amount;
 
     @Column(nullable = false)
-    private String type; // "DEPOSIT", "WITHDRAW", etc.
+    private String type;
 
     @Column(nullable = false)
     private LocalDateTime date;
