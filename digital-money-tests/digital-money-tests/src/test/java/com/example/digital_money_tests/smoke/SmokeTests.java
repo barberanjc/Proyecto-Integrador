@@ -9,7 +9,6 @@ import static org.hamcrest.Matchers.*;
 public class SmokeTests {
     private static final String BASE_URL = "http://localhost:8080/account-service";
 
-    // P-7 Ver últimos 5 movimientos
     @Test
     void testUltimosMovimientos() {
         given()
@@ -19,10 +18,9 @@ public class SmokeTests {
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
-                .body("size()", lessThanOrEqualTo(5)); // máximo 5, puede ser menos
+                .body("size()", lessThanOrEqualTo(5));
     }
 
-    // P-8 Ver perfil de cuenta
     @Test
     void testPerfilCuenta() {
         given()
@@ -36,13 +34,39 @@ public class SmokeTests {
                 .body("alias", notNullValue());
     }
 
-    // P-10 Listar tarjetas asociadas
     @Test
     void testListarTarjetas() {
         given()
                 .baseUri(BASE_URL)
                 .when()
                 .get("/cards/accounts/1/cards")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("size()", greaterThanOrEqualTo(0));
+    }
+
+    @Test
+    void testRecargarCuenta() {
+        given()
+                .baseUri(BASE_URL)
+                .contentType(ContentType.JSON)
+                .body("{ \"cardId\": 1, \"amount\": 500.0 }")
+                .when()
+                .post("/accounts/1/recharge")
+                .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("message", notNullValue())
+                .body("newBalance", greaterThan(0.0f));
+    }
+
+    @Test
+    void testListadoTransacciones() {
+        given()
+                .baseUri(BASE_URL)
+                .when()
+                .get("/accounts/1/activity")
                 .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)

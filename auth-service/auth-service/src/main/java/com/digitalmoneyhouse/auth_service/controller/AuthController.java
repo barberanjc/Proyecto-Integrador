@@ -5,6 +5,9 @@ import com.digitalmoneyhouse.auth_service.model.LoginRequest;
 import com.digitalmoneyhouse.auth_service.dto.UsuarioAuthDTO;
 import com.digitalmoneyhouse.auth_service.security.JwtUtil;
 import com.digitalmoneyhouse.auth_service.service.BlacklistedTokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +28,13 @@ public class AuthController {
     @Autowired
     private BlacklistedTokenService blacklistedTokenService;
 
+    @Operation(summary = "Login de usuario", description = "Autentica al usuario y devuelve un token JWT si las credenciales son válidas")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Login exitoso"),
+            @ApiResponse(responseCode = "400", description = "Contraseña incorrecta"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
@@ -46,6 +56,12 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "Logout de usuario", description = "Invalidación del token JWT para cerrar sesión")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logout exitoso"),
+            @ApiResponse(responseCode = "403", description = "Token inválido o no provisto"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader(name = "Authorization", required = false) String authHeader) {
         try {

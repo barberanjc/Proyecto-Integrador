@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.util.List;
 
@@ -22,6 +25,12 @@ public class AccountController {
     private final AccountService accountService;
     private final TransactionService transactionService;
 
+    @Operation(summary = "Consultar saldo de cuenta", description = "Devuelve el saldo disponible de una cuenta por ID de usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Saldo obtenido correctamente"),
+            @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<Double> getAccountBalance(@PathVariable Long id) {
         try {
@@ -35,6 +44,11 @@ public class AccountController {
         }
     }
 
+    @Operation(summary = "Crear cuenta", description = "Crea una nueva cuenta asociada a un usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Cuenta creada exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Error al crear la cuenta")
+    })
     @PostMapping("/create/{userId}")
     public ResponseEntity<String> createAccount(
             @PathVariable Long userId,
@@ -48,7 +62,13 @@ public class AccountController {
         }
     }
 
-
+    @Operation(summary = "Últimas transacciones", description = "Devuelve las últimas 5 transacciones de una cuenta")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transacciones obtenidas"),
+            @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos"),
+            @ApiResponse(responseCode = "500", description = "Error interno")
+    })
     @GetMapping("/{id}/transactions")
     public ResponseEntity<List<Transaction>> getTransactions(@PathVariable Long id) {
         try {
@@ -62,11 +82,23 @@ public class AccountController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @Operation(summary = "Perfil de cuenta", description = "Devuelve el CVU y alias de la cuenta asociada al usuario")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil obtenido correctamente")
+    })
     @GetMapping("/{userId}/profile")
     public ResponseEntity<AccountDTO> getAccountProfile(@PathVariable Long userId) {
         return ResponseEntity.ok(accountService.getAccountProfile(userId));
     }
 
+    @Operation(summary = "Actividad de cuenta", description = "Devuelve el historial completo de transacciones de una cuenta")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Actividad obtenida"),
+            @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
+            @ApiResponse(responseCode = "403", description = "Sin permisos"),
+            @ApiResponse(responseCode = "500", description = "Error interno")
+    })
     @GetMapping("/{id}/activity")
     public ResponseEntity<?> getAccountActivity(
             @PathVariable Long id,

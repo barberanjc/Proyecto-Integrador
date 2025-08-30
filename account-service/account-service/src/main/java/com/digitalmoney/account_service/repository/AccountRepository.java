@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByUserId(Long userId);
+    Optional<Account> findByAlias(String alias);
+    Optional<Account> findByCvu(String cvu);
 }

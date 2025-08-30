@@ -31,4 +31,10 @@ public class Transaction {
     private LocalDateTime date;
 
     private String description;
+
+    @Column(name = "destination")
+    private String destination;
+
+    @Column(name = "destination_type")
+    private String destinationType;
 }
