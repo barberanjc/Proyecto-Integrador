@@ -11,4 +11,5 @@ public interface CardService {
     List<Card> getCardsByAccount(Long accountId);
     CardDTO getCardDetail(Long accountId, Long cardId);
     void deleteCard(Long accountId, Long cardId);
+    boolean isAccountOwnedByToken(Long id, String token);
 }

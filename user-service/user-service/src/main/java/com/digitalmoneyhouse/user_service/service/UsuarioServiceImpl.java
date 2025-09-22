@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 
 import java.io.BufferedReader;
@@ -57,7 +58,8 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setDni(dto.getDni());
         usuario.setEmail(dto.getEmail());
         usuario.setTelefono(dto.getTelefono());
-        usuario.setPassword(dto.getPassword());
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        usuario.setPassword(encoder.encode(dto.getPassword()));
 
         usuario.setCvu(generarCVUUnico());
         usuario.setAlias(generarAliasUnico());
@@ -121,6 +123,28 @@ public class UsuarioServiceImpl implements UsuarioService {
                 usuario.getAlias()
         );
     }
+    @Override
+    public UsuarioRespuestaDTO obtenerUsuarioPorEmail(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return new UsuarioRespuestaDTO(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getDni(),
+                usuario.getEmail(),
+                usuario.getTelefono(),
+                usuario.getCvu(),
+                usuario.getAlias()
+        );
+    }
+    @Override
+    public Usuario getUsuarioEntityByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
+
 
 }
 

@@ -73,19 +73,17 @@ public class UsuarioController {
     })
     @GetMapping("/internal/email")
     public ResponseEntity<UsuarioAuthDTO> getUsuarioAuthByEmail(@RequestParam String email) {
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(email);
+        try {
+            Usuario usuario = usuarioService.getUsuarioEntityByEmail(email);
 
-        if (usuarioOpt.isEmpty()) {
+            UsuarioAuthDTO dto = new UsuarioAuthDTO();
+            dto.setEmail(usuario.getEmail());
+            dto.setPassword(usuario.getPassword());
+
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-
-        Usuario usuario = usuarioOpt.get();
-
-        UsuarioAuthDTO dto = new UsuarioAuthDTO();
-        dto.setEmail(usuario.getEmail());
-        dto.setPassword(usuario.getPassword());
-
-        return ResponseEntity.ok(dto);
     }
 
     @Operation(summary = "Obtener usuario por ID", description = "Devuelve los datos del usuario según su ID")
@@ -100,6 +98,15 @@ public class UsuarioController {
             return ResponseEntity.ok(usuario);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+    }
+    @GetMapping("/internal/userinfo")
+    public ResponseEntity<UsuarioRespuestaDTO> getUsuarioInfoByEmail(@RequestParam String email) {
+        try {
+            UsuarioRespuestaDTO dto = usuarioService.obtenerUsuarioPorEmail(email);
+            return ResponseEntity.ok(dto);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

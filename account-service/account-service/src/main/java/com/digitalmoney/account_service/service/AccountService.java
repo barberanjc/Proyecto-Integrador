@@ -5,4 +5,5 @@ public interface AccountService {
     Double getBalanceByUserId(Long userId);
     void createAccount(Long userId, AccountDTO dto);
     AccountDTO getAccountProfile(Long userId);
+    Long getUserIdByEmail(String email);
 }

@@ -1,9 +1,11 @@
 package com.digitalmoney.account_service.service;
 
+import com.digitalmoney.account_service.client.UsuarioClient;
 import com.digitalmoney.account_service.dto.AccountDTO;
 import com.digitalmoney.account_service.model.Account;
 import com.digitalmoney.account_service.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.digitalmoney.account_service.exception.AccountNotFoundException;
@@ -15,6 +17,9 @@ import com.digitalmoney.account_service.exception.AccountNotFoundException;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
+    @Autowired
+    private UsuarioClient usuarioClient;
+
 
     @Override
     public Double getBalanceByUserId(Long userId) {
@@ -40,4 +45,13 @@ public class AccountServiceImpl implements AccountService {
 
         return new AccountDTO(account.getCvu(), account.getAlias());
     }
+    @Override
+    public Long getUserIdByEmail(String email) {
+        System.out.println("📡 Consultando UsuarioClient con email: " + email);
+        Long userId = usuarioClient.getUsuarioByEmail(email).getId();
+        System.out.println("🎯 userId recibido desde UsuarioClient: " + userId);
+        return userId;
+    }
+
+
 }

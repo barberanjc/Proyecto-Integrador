@@ -13,4 +13,6 @@ public interface TransactionService {
     Transaction addMoneyFromCard(Long accountId, TransferRequest request);
     List<TransferHistoryDTO> getLastRecipients(Long accountId, int limit);
     Transaction transferMoney(Long accountId, TransferRequestDTO request);
+
+    boolean isAccountOwnedByToken(Long id, String token);
 }

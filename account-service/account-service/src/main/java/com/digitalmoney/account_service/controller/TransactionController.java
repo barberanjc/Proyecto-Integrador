@@ -7,7 +7,9 @@ import com.digitalmoney.account_service.exception.AccountNotFoundException;
 import com.digitalmoney.account_service.exception.InsufficientFundsException;
 import com.digitalmoney.account_service.exception.TransactionNotFoundException;
 import com.digitalmoney.account_service.model.Transaction;
+import com.digitalmoney.account_service.security.JwtUtil;
 import com.digitalmoney.account_service.service.TransactionService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,8 +29,10 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final JwtUtil jwtUtil;
 
     @Operation(summary = "Detalle de transacción", description = "Devuelve la información detallada de una transacción específica de una cuenta")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Transacción encontrada"),
             @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
@@ -42,25 +46,26 @@ public class TransactionController {
             @PathVariable Long transactionId,
             @RequestHeader("Authorization") String token) {
 
+        if (!transactionService.isAccountOwnedByToken(accountId, token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos");
+        }
+
         try {
             Transaction transaction = transactionService.getTransactionById(accountId, transactionId);
             return ResponseEntity.ok(transaction);
         } catch (AccountNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Cuenta no encontrada");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cuenta no encontrada");
         } catch (TransactionNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body("Transacción no encontrada");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Transacción no encontrada");
         } catch (AccessDeniedException ex) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body("No tiene permisos");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos");
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno del servidor");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
     }
 
     @Operation(summary = "Recargar cuenta desde tarjeta", description = "Agrega dinero a la cuenta desde una tarjeta existente")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Recarga exitosa"),
             @ApiResponse(responseCode = "403", description = "Sin permisos"),
@@ -72,6 +77,11 @@ public class TransactionController {
             @PathVariable Long id,
             @RequestHeader("Authorization") String token,
             @RequestBody TransferRequest request) {
+
+        if (!transactionService.isAccountOwnedByToken(id, token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos");
+        }
+
         try {
             Transaction transaction = transactionService.addMoneyFromCard(id, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(transaction);
@@ -85,6 +95,7 @@ public class TransactionController {
     }
 
     @Operation(summary = "Transferir dinero entre cuentas", description = "Realiza una transferencia desde la cuenta origen a otra cuenta usando alias o CVU")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Transferencia exitosa"),
             @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
@@ -97,6 +108,11 @@ public class TransactionController {
             @PathVariable Long id,
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody TransferRequestDTO request) {
+
+        if (!transactionService.isAccountOwnedByToken(id, token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos");
+        }
+
         try {
             Transaction transaction = transactionService.transferMoney(id, request);
             return ResponseEntity.ok(transaction);
@@ -112,6 +128,7 @@ public class TransactionController {
     }
 
     @Operation(summary = "Últimos destinatarios", description = "Devuelve los últimos destinatarios de transferencias realizadas desde la cuenta")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Destinatarios encontrados"),
             @ApiResponse(responseCode = "400", description = "Cuenta no encontrada"),
@@ -123,8 +140,13 @@ public class TransactionController {
     public ResponseEntity<?> getLastRecipients(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) {
+
+        if (!transactionService.isAccountOwnedByToken(id, token)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tiene permisos");
+        }
+
         try {
-            List<TransferHistoryDTO> recipients = transactionService.getLastRecipients(id,10);
+            List<TransferHistoryDTO> recipients = transactionService.getLastRecipients(id, 10);
 
             if (recipients.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -141,5 +163,4 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno");
         }
     }
-
 }

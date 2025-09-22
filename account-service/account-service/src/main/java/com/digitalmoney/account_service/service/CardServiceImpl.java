@@ -1,12 +1,15 @@
 package com.digitalmoney.account_service.service;
 
+import com.digitalmoney.account_service.client.UsuarioClient;
 import com.digitalmoney.account_service.dto.CardDTO;
 import com.digitalmoney.account_service.exception.AccountNotFoundException;
 import com.digitalmoney.account_service.model.Account;
 import com.digitalmoney.account_service.model.Card;
 import com.digitalmoney.account_service.repository.AccountRepository;
 import com.digitalmoney.account_service.repository.CardRepository;
+import com.digitalmoney.account_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +22,9 @@ public class CardServiceImpl implements CardService {
 
     private final CardRepository cardRepository;
     private final AccountRepository accountRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
+
 
     @Override
     public Card createCard(CardDTO dto) {
@@ -82,4 +88,23 @@ public class CardServiceImpl implements CardService {
 
         cardRepository.delete(card);
     }
+
+    @Override
+    public boolean isAccountOwnedByToken(Long accountId, String token) {
+        String email = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Cuenta no encontrada"));
+
+        Long userIdFromToken = getUserIdByEmail(email);
+
+        return account.getUserId().equals(userIdFromToken);
+    }
+    @Autowired
+    private UsuarioClient usuarioClient;
+
+    private Long getUserIdByEmail(String email) {
+        return usuarioClient.getUsuarioByEmail(email).getId();
+    }
+
 }

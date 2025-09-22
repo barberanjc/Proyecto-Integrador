@@ -1,6 +1,7 @@
 package com.digitalmoney.account_service.service;
 
 
+import com.digitalmoney.account_service.client.UsuarioClient;
 import com.digitalmoney.account_service.dto.TransferHistoryDTO;
 import com.digitalmoney.account_service.dto.TransferRequest;
 import com.digitalmoney.account_service.dto.TransferRequestDTO;
@@ -11,7 +12,9 @@ import com.digitalmoney.account_service.model.Account;
 import com.digitalmoney.account_service.model.Transaction;
 import com.digitalmoney.account_service.repository.AccountRepository;
 import com.digitalmoney.account_service.repository.TransactionRepository;
+import com.digitalmoney.account_service.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -124,5 +127,18 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
 
         return transactionRepository.save(tx);
+    }
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UsuarioClient usuarioClient;
+
+    public boolean isAccountOwnedByToken(Long accountId, String token) {
+        String email = jwtUtil.extractUsername(token.replace("Bearer ", ""));
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Cuenta no encontrada"));
+        Long userIdFromToken = usuarioClient.getUsuarioByEmail(email).getId();
+        return account.getUserId().equals(userIdFromToken);
     }
 }
